@@ -115,6 +115,16 @@
             background-color: #e7f1ff;
             border-radius: 8px;
         }
+        .weekly-planner {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e7f1ff;
+            border-radius: 8px;
+        }
+        .weekly-table th, .weekly-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -125,6 +135,7 @@
                 <option value="">Select a Recipe</option>
                 <option value="create">Create New Recipe</option>
             </select>
+            <button id="weekly-planner-button">Weekly Planner</button>
         </div>
         <div class="content">
             <h1>Cost-Saving Meal Planner</h1>
@@ -155,6 +166,50 @@
                     <button id="save-recipe">Save Recipe</button>
                 </div>
             </div>
+
+            <div id="weekly-planner" class="weekly-planner hidden">
+                <h2>Weekly Planner</h2>
+                <table class="weekly-table">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Meal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weekly-meals-body">
+                        <tr>
+                            <td>Monday</td>
+                            <td><select class="meal-select"></select></td>
+                        </tr>
+                        <tr>
+                            <td>Tuesday</td>
+                            <td><select class="meal-select"></select></td>
+                        </tr>
+                        <tr>
+                            <td>Wednesday</td>
+                            <td><select class="meal-select"></select></td>
+                        </tr>
+                        <tr>
+                            <td>Thursday</td>
+                            <td><select class="meal-select"></select></td>
+                        </tr>
+                        <tr>
+                            <td>Friday</td>
+                            <td><select class="meal-select"></select></td>
+                        </tr>
+                        <tr>
+                            <td>Saturday</td>
+                            <td><select class="meal-select"></select></td>
+                        </tr>
+                        <tr>
+                            <td>Sunday</td>
+                            <td><select class="meal-select"></select></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="generate-shopping-list">Generate Shopping List</button>
+                <div id="shopping-list" class="hidden"></div>
+            </div>
         </div>
     </div>
 
@@ -183,32 +238,15 @@
                 name: "Vegetable Stir-fry",
                 ingredients: ["Mixed Vegetables", "Soy Sauce", "Rice"],
                 prices: { "Supermarket 1": 3.00, "Supermarket 2": 2.75, "Supermarket 3": 3.50 },
-                recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce.\n3. Serve vegetables over rice."
-            },
-            {
-                name: "Pasta Primavera",
-                ingredients: ["Pasta", "Mixed Vegetables", "Olive Oil", "Parmesan"],
-                prices: { "Supermarket 1": 4.00, "Supermarket 2": 3.50, "Supermarket 3": 4.25 },
-                recipe: "1. Cook pasta according to package instructions.\n2. Sauté vegetables in olive oil.\n3. Mix pasta and vegetables, top with Parmesan."
+                recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce."
             }
+            // Add more meals as needed
         ];
 
         let userRecipes = JSON.parse(localStorage.getItem('userRecipes')) || [];
 
-        // Update common ingredients with user recipe ingredients
-        function updateCommonIngredients() {
-            userRecipes.forEach(recipe => {
-                recipe.ingredients.forEach(ingredient => {
-                    if (!commonIngredientsList.includes(ingredient)) {
-                        commonIngredientsList.push(ingredient);
-                    }
-                });
-            });
-        }
-
-        // Render common ingredients for selection
+        // Populate common ingredients
         function renderCommonIngredients() {
-            updateCommonIngredients();
             const commonIngredientsDiv = document.getElementById('common-ingredients');
             commonIngredientsDiv.innerHTML = '';
 
@@ -221,28 +259,33 @@
                 });
                 commonIngredientsDiv.appendChild(div);
             });
-
-            document.getElementById('submit-ingredients').classList.remove('hidden');
         }
 
-        // Populate dropdown with user recipes
+        // Populate user recipes dropdown
         function populateUserRecipesDropdown() {
             const dropdown = document.getElementById('user-recipes-dropdown');
+            dropdown.innerHTML = '<option value="">Select a Recipe</option><option value="create">Create New Recipe</option>';
             userRecipes.forEach((recipe, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = recipe.name;
-                dropdown.appendChild(option);
+                dropdown.innerHTML += `<option value="${index}">${recipe.name}</option>`;
             });
         }
 
-        // Show ingredients when selecting a user recipe
+        // Show selected recipe
+        function showRecipe(mealName, recipe) {
+            const recipeContent = document.getElementById('recipe-content');
+            recipeContent.innerHTML = `<strong>${mealName}</strong>:<br>${recipe.replace(/\n/g, '<br>')}`;
+            document.getElementById('meal-table-container').classList.add('hidden');
+            document.getElementById('recipe-details').classList.remove('hidden');
+        }
+
+        // Handle recipe selection change
         document.getElementById('user-recipes-dropdown').addEventListener('change', function() {
             const selectedValue = this.value;
             if (selectedValue === "create") {
                 document.getElementById('user-recipe-container').classList.remove('hidden');
                 document.getElementById('meal-table-container').classList.add('hidden');
                 document.getElementById('recipe-details').classList.add('hidden');
+                document.getElementById('weekly-planner').classList.add('hidden');
             } else if (selectedValue) {
                 const selectedRecipe = userRecipes[selectedValue];
                 showIngredientsForRecipe(selectedRecipe);
@@ -304,20 +347,6 @@
             document.getElementById('meal-table-container').classList.remove('hidden');
         }
 
-        // Show selected recipe
-        function showRecipe(mealName, recipe) {
-            const recipeContent = document.getElementById('recipe-content');
-            recipeContent.innerHTML = `<strong>${mealName}</strong>:<br>${recipe.replace(/\n/g, '<br>')}`;
-            document.getElementById('meal-table-container').classList.add('hidden');
-            document.getElementById('recipe-details').classList.remove('hidden');
-        }
-
-        // Back to meal table from recipe
-        document.getElementById('back-to-meal-table').addEventListener('click', function() {
-            document.getElementById('recipe-details').classList.add('hidden');
-            document.getElementById('meal-table-container').classList.remove('hidden');
-        });
-
         // Save user recipe
         document.getElementById('save-recipe').addEventListener('click', function() {
             const recipeName = document.getElementById('new-recipe-name').value;
@@ -342,6 +371,54 @@
                 alert("Please fill out all fields.");
             }
         });
+
+        // Handle weekly planner button click
+        document.getElementById('weekly-planner-button').addEventListener('click', function() {
+            document.getElementById('weekly-planner').classList.remove('hidden');
+            document.getElementById('meal-table-container').classList.add('hidden');
+            document.getElementById('recipe-details').classList.add('hidden');
+            populateWeeklyMealSelects();
+        });
+
+        // Populate meal selects in the weekly planner
+        function populateWeeklyMealSelects() {
+            const mealSelects = document.querySelectorAll('.meal-select');
+            mealSelects.forEach(select => {
+                select.innerHTML = '<option value="">Select Meal</option>';
+                healthyMeals.forEach(meal => {
+                    select.innerHTML += `<option value="${meal.name}">${meal.name}</option>`;
+                });
+            });
+        }
+
+        // Generate shopping list based on selected meals
+        document.getElementById('generate-shopping-list').addEventListener('click', function() {
+            const mealSelects = document.querySelectorAll('.meal-select');
+            const shoppingList = {};
+
+            mealSelects.forEach(select => {
+                const selectedMeal = select.value;
+                if (selectedMeal) {
+                    const meal = healthyMeals.find(m => m.name === selectedMeal);
+                    meal.ingredients.forEach(ingredient => {
+                        shoppingList[ingredient] = (shoppingList[ingredient] || 0) + 1;
+                    });
+                }
+            });
+
+            displayShoppingList(shoppingList);
+        });
+
+        // Display the shopping list
+        function displayShoppingList(shoppingList) {
+            const shoppingListDiv = document.getElementById('shopping-list');
+            shoppingListDiv.innerHTML = '<h3>Shopping List</h3>';
+            const listItems = Object.entries(shoppingList).map(([ingredient, quantity]) => {
+                return `<p>${ingredient}: ${quantity}</p>`;
+            }).join('');
+            shoppingListDiv.innerHTML += listItems;
+            shoppingListDiv.classList.remove('hidden');
+        }
 
         renderCommonIngredients();
         populateUserRecipesDropdown();
