@@ -4,246 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cost-Saving Meal Planner</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Roboto', sans-serif; 
-            margin: 0; 
-            background-color: #FFF5E4; 
-            color: #6A9C89; 
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFF5E4;
+            color: #242331;
         }
-        h1, h2 {
-            color: #CD5C08; 
-            text-align: center;
-        }
-        .container {
+        #common-ingredients {
             display: flex;
-            max-width: 800px; 
-            margin: 40px auto; 
-            padding: 20px; 
-            background: #C1D8C3; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        .sidebar {
-            width: 200px; 
-            margin-right: 20px; 
-        }
-        .sidebar button, .sidebar select {
-            width: 100%; 
-            margin-bottom: 10px; 
-            padding: 10px; 
-            background-color: #CD5C08; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            transition: background-color 0.3s;
-        }
-        .sidebar button:hover, .sidebar select:hover { 
-            background-color: #6A9C89; 
-        }
-        .content {
-            flex: 1; 
+            flex-wrap: wrap;
+            margin-bottom: 20px;
         }
         .ingredient-card {
-            display: inline-block; 
-            margin: 10px; 
-            padding: 15px; 
-            background-color: #CD5C08; 
-            border-radius: 8px; 
-            color: white; 
-            transition: transform 0.3s, box-shadow 0.3s; 
-            cursor: pointer;
-        }
-        .ingredient-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); 
-        }
-        .selected { 
-            background-color: #6A9C89; 
-            color: white; 
-        }
-        table { 
-            border-collapse: collapse; 
-            width: 100%; 
-            margin-top: 20px; 
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: center; 
-        }
-        th { 
-            background-color: #CD5C08; 
-            color: white; 
-        }
-        .hidden { display: none; }
-        .missing { 
-            color: red; 
-            font-weight: bold; 
-        }
-        button { 
-            background-color: #CD5C08; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            transition: background-color 0.3s; 
-            margin-top: 20px;
-        }
-        button:hover { 
-            background-color: #6A9C89; 
-        }
-        .meal-link {
-            color: #CD5C08; 
-            text-decoration: underline; 
-            cursor: pointer;
-        }
-        .meal-link:hover { 
-            color: #6A9C89; 
-        }
-        .footer {
-            text-align: center; 
-            margin-top: 40px; 
-            font-size: 14px; 
-            color: #6A9C89;
-        }
-        .recipe-form {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #FFF5E4; 
-            border-radius: 8px;
-        }
-        .weekly-planner {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #FFF5E4; 
-            border-radius: 8px;
-        }
-        .weekly-table th, .weekly-table td {
-            border: 1px solid #ddd;
+            border: 1px solid #C1D8C3;
             padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .ingredient-card.selected {
+            background-color: #6A9C89;
+            color: white;
+        }
+        button {
+            background-color: #CD5C08;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+            display: inline-block; /* Ensures button visibility */
+        }
+        button:hover {
+            background-color: #A27035;
+        }
+        .hidden {
+            display: none;
+        }
+        #meal-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #meal-table th, #meal-table td {
+            border: 1px solid #C1D8C3;
+            padding: 8px;
+            text-align: left;
+        }
+        .missing {
+            color: red;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <button id="pre-created-recipes">Pre-Created Recipes</button>
-            <select id="user-recipes-dropdown">
-                <option value="">Select a Recipe</option>
-                <option value="create">Create New Recipe</option>
-            </select>
-            <button id="weekly-planner-button">Weekly Planner</button>
-        </div>
-        <div class="content">
-            <h1>Cost-Saving Meal Planner</h1>
-
-            <div id="ingredient-selection">
-                <h2>Select Ingredients You Have</h2>
-                <div id="common-ingredients"></div>
-                <button id="submit-ingredients" class="hidden">Next</button>
-            </div>
-
-            <div id="meal-table-container" class="hidden">
-                <h2>Missing Ingredients and Prices</h2>
-                <div id="meal-table"></div>
-            </div>
-
-            <div id="recipe-details" class="hidden">
-                <h2>Recipe</h2>
-                <div id="recipe-content"></div>
-                <button id="back-to-meal-table">Back to Prices</button>
-            </div>
-
-            <div id="user-recipe-container" class="hidden">
-                <h2>Create Your Own Recipe</h2>
-                <div class="recipe-form">
-                    <input type="text" id="new-recipe-name" placeholder="Recipe Name" />
-                    <input type="text" id="new-recipe-ingredients" placeholder="Ingredients (comma separated)" />
-                    <textarea id="new-recipe-instructions" placeholder="Instructions"></textarea>
-                    <button id="save-recipe">Save Recipe</button>
-                </div>
-            </div>
-
-            <div id="weekly-planner" class="weekly-planner hidden">
-                <h2>Weekly Planner</h2>
-                <table class="weekly-table">
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Meal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="weekly-meals-body">
-                        <tr>
-                            <td>Monday</td>
-                            <td><select class="meal-select"></select></td>
-                        </tr>
-                        <tr>
-                            <td>Tuesday</td>
-                            <td><select class="meal-select"></select></td>
-                        </tr>
-                        <tr>
-                            <td>Wednesday</td>
-                            <td><select class="meal-select"></select></td>
-                        </tr>
-                        <tr>
-                            <td>Thursday</td>
-                            <td><select class="meal-select"></select></td>
-                        </tr>
-                        <tr>
-                            <td>Friday</td>
-                            <td><select class="meal-select"></select></td>
-                        </tr>
-                        <tr>
-                            <td>Saturday</td>
-                            <td><select class="meal-select"></select></td>
-                        </tr>
-                        <tr>
-                            <td>Sunday</td>
-                            <td><select class="meal-select"></select></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button id="generate-shopping-list">Generate Shopping List</button>
-                <div id="shopping-list" class="hidden"></div>
-            </div>
-        </div>
+    <h1>Cost-Saving Meal Planner</h1>
+    <div id="ingredient-selection">
+        <h2>Select Ingredients You Have</h2>
+        <div id="common-ingredients"></div>
+        <button id="submit-ingredients" class="hidden">Next</button>
     </div>
 
-    <div class="footer">
-        <p>© 2024 Cost-Saving Meal Planner</p>
+    <div id="meal-table-container" class="hidden">
+        <h2>Missing Ingredients and Prices</h2>
+        <div id="meal-table"></div>
     </div>
 
     <script>
         const commonIngredientsList = [
-            "Chicken", "Tortillas", "Lettuce", "Tomato", "Cheese",
-            "Mixed Vegetables", "Soy Sauce", "Rice", "Pasta",
-            "Olive Oil", "Parmesan", "Garlic", "Onion",
-            "Bell Pepper", "Zucchini", "Carrot", "Spinach",
-            "Black Beans", "Corn", "Avocado", "Sour Cream",
-            "Jalapeños", "Basil", "Red Pepper Flakes", "Tofu"
+            "Tomato", "Onion", "Garlic", "Chicken", "Beef", "Pork", "Rice", 
+            "Pasta", "Spinach", "Carrot", "Potato", "Broccoli", "Pepper", 
+            "Cheese", "Egg", "Milk", "Butter", "Salt", "Pepper", "Olive Oil", 
+            "Soy Sauce", "Lentils", "Canned Beans", "Frozen Veggies", "Tuna"
         ];
 
         const healthyMeals = [
             {
-                name: "Chicken Tacos",
-                ingredients: ["Chicken", "Tortillas", "Lettuce", "Tomato", "Cheese"],
-                prices: { "Supermarket 1": 5.00, "Supermarket 2": 4.50, "Supermarket 3": 5.25 },
-                recipe: "1. Cook chicken in a pan.\n2. Assemble tacos with ingredients."
-            },
-            {
-                name: "Vegetable Stir-Fry",
-                ingredients: ["Mixed Vegetables", "Soy Sauce", "Rice"],
-                prices: { "Supermarket 1": 3.00, "Supermarket 2": 2.75, "Supermarket 3": 3.25 },
+                name: "Stir-Fried Vegetables",
+                ingredients: ["Vegetables", "Soy Sauce", "Rice"],
+                prices: {
+                    "Store A": 3.50,
+                    "Store B": 4.00,
+                    "Store C": 3.75
+                },
                 recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce."
-            }
+            },
+            // Add more recipes as needed
         ];
-
-        let userRecipes = JSON.parse(localStorage.getItem('userRecipes')) || [];
 
         function renderCommonIngredients() {
             const commonIngredientsDiv = document.getElementById('common-ingredients');
@@ -255,57 +103,11 @@
                 div.className = 'ingredient-card';
                 div.addEventListener('click', () => {
                     div.classList.toggle('selected');
+                    const anySelected = document.querySelector('.ingredient-card.selected');
+                    document.getElementById('submit-ingredients').classList.toggle('hidden', !anySelected);
                 });
                 commonIngredientsDiv.appendChild(div);
             });
-        }
-
-        function populateUserRecipesDropdown() {
-            const dropdown = document.getElementById('user-recipes-dropdown');
-            dropdown.innerHTML = '<option value="">Select a Recipe</option><option value="create">Create New Recipe</option>';
-            userRecipes.forEach((recipe, index) => {
-                dropdown.innerHTML += `<option value="${index}">${recipe.name}</option>`;
-            });
-        }
-
-        function showRecipe(mealName, recipe) {
-            const recipeContent = document.getElementById('recipe-content');
-            recipeContent.innerHTML = `<strong>${mealName}</strong>:<br>${recipe.replace(/\n/g, '<br>')}`;
-            document.getElementById('meal-table-container').classList.add('hidden');
-            document.getElementById('recipe-details').classList.remove('hidden');
-        }
-
-        document.getElementById('user-recipes-dropdown').addEventListener('change', function() {
-            const selectedValue = this.value;
-            if (selectedValue === "create") {
-                document.getElementById('user-recipe-container').classList.remove('hidden');
-                document.getElementById('ingredient-selection').classList.add('hidden');
-                document.getElementById('meal-table-container').classList.add('hidden');
-                document.getElementById('recipe-details').classList.add('hidden');
-                document.getElementById('weekly-planner').classList.add('hidden');
-            } else if (selectedValue) {
-                const selectedRecipe = userRecipes[selectedValue];
-                showIngredientsForRecipe(selectedRecipe);
-            }
-        });
-
-        function showIngredientsForRecipe(recipe) {
-            const commonIngredientsDiv = document.getElementById('common-ingredients');
-            commonIngredientsDiv.innerHTML = '';
-
-            recipe.ingredients.forEach(ingredient => {
-                const div = document.createElement('div');
-                div.textContent = ingredient;
-                div.className = 'ingredient-card';
-                div.addEventListener('click', () => {
-                    div.classList.toggle('selected');
-                });
-                commonIngredientsDiv.appendChild(div);
-            });
-
-            document.getElementById('submit-ingredients').classList.remove('hidden');
-            document.getElementById('meal-table-container').classList.add('hidden');
-            document.getElementById('recipe-details').classList.add('hidden');
         }
 
         document.getElementById('submit-ingredients').addEventListener('click', function() {
@@ -347,96 +149,7 @@
             document.getElementById('meal-table-container').classList.remove('hidden');
         }
 
-        document.getElementById('save-recipe').addEventListener('click', function() {
-            const recipeName = document.getElementById('new-recipe-name').value;
-            const recipeIngredients = document.getElementById('new-recipe-ingredients').value.split(',').map(ing => ing.trim());
-            const recipeInstructions = document.getElementById('new-recipe-instructions').value;
-
-            if (recipeName && recipeIngredients.length > 0 && recipeInstructions) {
-                const newRecipe = {
-                    name: recipeName,
-                    ingredients: recipeIngredients,
-                    recipe: recipeInstructions
-                };
-                userRecipes.push(newRecipe);
-                localStorage.setItem('userRecipes', JSON.stringify(userRecipes));
-                alert("Recipe saved successfully!");
-                document.getElementById('new-recipe-name').value = '';
-                document.getElementById('new-recipe-ingredients').value = '';
-                document.getElementById('new-recipe-instructions').value = '';
-                renderCommonIngredients(); // Update ingredient list with new ingredients
-                populateUserRecipesDropdown(); // Refresh dropdown
-            } else {
-                alert("Please fill out all fields.");
-            }
-        });
-
-        document.getElementById('weekly-planner-button').addEventListener('click', function() {
-            document.getElementById('weekly-planner').classList.remove('hidden');
-            document.getElementById('meal-table-container').classList.add('hidden');
-            document.getElementById('recipe-details').classList.add('hidden');
-            populateWeeklyMealSelects();
-        });
-
-        function populateWeeklyMealSelects() {
-            const mealSelects = document.querySelectorAll('.meal-select');
-            mealSelects.forEach(select => {
-                select.innerHTML = '<option value="">Select Meal</option>';
-                healthyMeals.forEach(meal => {
-                    select.innerHTML += `<option value="${meal.name}">${meal.name}</option>`;
-                });
-            });
-        }
-
-        document.getElementById('generate-shopping-list').addEventListener('click', function() {
-            const mealSelects = document.querySelectorAll('.meal-select');
-            const shoppingList = {};
-
-            mealSelects.forEach(select => {
-                const selectedMeal = select.value;
-                if (selectedMeal) {
-                    const meal = healthyMeals.find(m => m.name === selectedMeal);
-                    meal.ingredients.forEach(ingredient => {
-                        shoppingList[ingredient] = (shoppingList[ingredient] || 0) + 1;
-                    });
-                }
-            });
-
-            displayShoppingList(shoppingList);
-        });
-
-        function displayShoppingList(shoppingList) {
-            const shoppingListDiv = document.getElementById('shopping-list');
-            shoppingListDiv.innerHTML = '<h3>Shopping List</h3>';
-            const listItems = Object.entries(shoppingList).map(([ingredient, quantity]) => {
-                return `<p>${ingredient}: ${quantity}</p>`;
-            }).join('');
-            shoppingListDiv.innerHTML += listItems;
-            shoppingListDiv.classList.remove('hidden');
-        }
-
-        document.getElementById('pre-created-recipes').addEventListener('click', function() {
-            const mealTable = document.getElementById('meal-table');
-            let tableHTML = `<h3>Pre-Created Recipes</h3><table>
-                <tr>
-                    <th>Recipe</th>
-                    <th>Action</th>
-                </tr>`;
-
-            healthyMeals.forEach(meal => {
-                tableHTML += `<tr>
-                    <td>${meal.name}</td>
-                    <td><button onclick="showIngredientsForRecipe(meal)">View Ingredients</button></td>
-                </tr>`;
-            });
-
-            tableHTML += `</table>`;
-            mealTable.innerHTML = tableHTML;
-            document.getElementById('meal-table-container').classList.remove('hidden');
-        });
-
         renderCommonIngredients();
-        populateUserRecipesDropdown();
     </script>
 </body>
 </html>
