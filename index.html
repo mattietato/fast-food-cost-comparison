@@ -233,10 +233,10 @@
                 name: "Chicken Tacos",
                 ingredients: ["Chicken", "Tortillas", "Lettuce", "Tomato", "Cheese"],
                 prices: { "Supermarket 1": 5.00, "Supermarket 2": 4.50, "Supermarket 3": 5.25 },
-                recipe: "1. Cook chicken in a pan.\n2. Warm tortillas.\n3. Assemble with lettuce, tomato, and cheese."
+                recipe: "1. Cook chicken in a pan.\n2. Assemble tacos with ingredients."
             },
             {
-                name: "Vegetable Stir-fry",
+                name: "Vegetable Stir-Fry",
                 ingredients: ["Mixed Vegetables", "Soy Sauce", "Rice"],
                 prices: { "Supermarket 1": 3.00, "Supermarket 2": 2.75, "Supermarket 3": 3.25 },
                 recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce."
@@ -279,6 +279,7 @@
             const selectedValue = this.value;
             if (selectedValue === "create") {
                 document.getElementById('user-recipe-container').classList.remove('hidden');
+                document.getElementById('ingredient-selection').classList.add('hidden');
                 document.getElementById('meal-table-container').classList.add('hidden');
                 document.getElementById('recipe-details').classList.add('hidden');
                 document.getElementById('weekly-planner').classList.add('hidden');
