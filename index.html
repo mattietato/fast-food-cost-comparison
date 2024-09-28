@@ -87,6 +87,12 @@
             font-size: 14px; 
             color: #666;
         }
+        .recipe-form {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e7f1ff;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -108,6 +114,16 @@
             <h2>Recipe</h2>
             <div id="recipe-content"></div>
             <button id="back-to-meal-table">Back to Prices</button>
+        </div>
+
+        <div id="user-recipe-container" class="hidden">
+            <h2>Create Your Own Recipe</h2>
+            <div class="recipe-form">
+                <input type="text" id="new-recipe-name" placeholder="Recipe Name" />
+                <input type="text" id="new-recipe-ingredients" placeholder="Ingredients (comma separated)" />
+                <textarea id="new-recipe-instructions" placeholder="Instructions"></textarea>
+                <button id="save-recipe">Save Recipe</button>
+            </div>
         </div>
     </div>
 
@@ -240,6 +256,29 @@
         document.getElementById('back-to-meal-table').addEventListener('click', function() {
             document.getElementById('recipe-details').classList.add('hidden');
             document.getElementById('meal-table-container').classList.remove('hidden');
+        });
+
+        // Save user-defined recipe
+        document.getElementById('save-recipe').addEventListener('click', function() {
+            const recipeName = document.getElementById('new-recipe-name').value;
+            const recipeIngredients = document.getElementById('new-recipe-ingredients').value.split(',').map(ing => ing.trim());
+            const recipeInstructions = document.getElementById('new-recipe-instructions').value;
+
+            if (recipeName && recipeIngredients.length > 0 && recipeInstructions) {
+                healthyMeals.push({
+                    name: recipeName,
+                    ingredients: recipeIngredients,
+                    prices: { "Your Recipe": 0.00 }, // Placeholder for pricing
+                    recipe: recipeInstructions
+                });
+
+                alert("Recipe saved successfully!");
+                document.getElementById('new-recipe-name').value = '';
+                document.getElementById('new-recipe-ingredients').value = '';
+                document.getElementById('new-recipe-instructions').value = '';
+            } else {
+                alert("Please fill out all fields.");
+            }
         });
 
         // Initialize the application
