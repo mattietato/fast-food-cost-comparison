@@ -236,7 +236,7 @@
             });
         }
 
-        // Toggle between generic recipes and user recipes
+        // Show ingredients when selecting a user recipe
         document.getElementById('user-recipes-dropdown').addEventListener('change', function() {
             const selectedValue = this.value;
             if (selectedValue === "create") {
@@ -245,9 +245,28 @@
                 document.getElementById('recipe-details').classList.add('hidden');
             } else if (selectedValue) {
                 const selectedRecipe = userRecipes[selectedValue];
-                calculatePrices([selectedRecipe], []); // Show user recipe in the price table
+                showIngredientsForRecipe(selectedRecipe);
             }
         });
+
+        // Show ingredients for selected recipe
+        function showIngredientsForRecipe(recipe) {
+            const commonIngredientsDiv = document.getElementById('common-ingredients');
+            commonIngredientsDiv.innerHTML = '';
+            recipe.ingredients.forEach(ingredient => {
+                const div = document.createElement('div');
+                div.textContent = ingredient;
+                div.className = 'ingredient-card';
+                div.addEventListener('click', () => {
+                    div.classList.toggle('selected');
+                });
+                commonIngredientsDiv.appendChild(div);
+            });
+
+            document.getElementById('submit-ingredients').classList.remove('hidden');
+            document.getElementById('meal-table-container').classList.add('hidden');
+            document.getElementById('recipe-details').classList.add('hidden');
+        }
 
         // Handle ingredient selection submission
         document.getElementById('submit-ingredients').addEventListener('click', function() {
@@ -333,23 +352,11 @@
                 document.getElementById('new-recipe-ingredients').value = '';
                 document.getElementById('new-recipe-instructions').value = '';
                 renderCommonIngredients(); // Update ingredient list with new ingredients
-                displayUserRecipes(); // Refresh user recipes
                 populateUserRecipesDropdown(); // Refresh dropdown
             } else {
                 alert("Please fill out all fields.");
             }
         });
-
-        function displayUserRecipes() {
-            const dropdown = document.getElementById('user-recipes-dropdown');
-            dropdown.innerHTML = '<option value="">Select a Recipe</option><option value="create">Create New Recipe</option>';
-            userRecipes.forEach((recipe, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = recipe.name;
-                dropdown.appendChild(option);
-            });
-        }
 
         renderCommonIngredients();
         populateUserRecipesDropdown();
