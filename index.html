@@ -17,12 +17,34 @@
             text-align: center;
         }
         .container {
+            display: flex;
             max-width: 800px; 
             margin: 40px auto; 
             padding: 20px; 
             background: #ffffff; 
             border-radius: 10px; 
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar {
+            width: 200px; 
+            margin-right: 20px; 
+        }
+        .sidebar button {
+            width: 100%; 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            transition: background-color 0.3s;
+        }
+        .sidebar button:hover { 
+            background-color: #0056b3; 
+        }
+        .content {
+            flex: 1; 
         }
         .ingredient-card {
             display: inline-block; 
@@ -97,32 +119,38 @@
 </head>
 <body>
     <div class="container">
-        <h1>Cost-Saving Meal Planner</h1>
-
-        <div id="ingredient-selection">
-            <h2>Select Ingredients You Have</h2>
-            <div id="common-ingredients"></div>
-            <button id="submit-ingredients" class="hidden">Next</button>
+        <div class="sidebar">
+            <button id="generic-recipes">Generic Recipes</button>
+            <button id="user-recipes">My Recipes</button>
         </div>
+        <div class="content">
+            <h1>Cost-Saving Meal Planner</h1>
 
-        <div id="meal-table-container" class="hidden">
-            <h2>Missing Ingredients and Prices</h2>
-            <div id="meal-table"></div>
-        </div>
+            <div id="ingredient-selection">
+                <h2>Select Ingredients You Have</h2>
+                <div id="common-ingredients"></div>
+                <button id="submit-ingredients" class="hidden">Next</button>
+            </div>
 
-        <div id="recipe-details" class="hidden">
-            <h2>Recipe</h2>
-            <div id="recipe-content"></div>
-            <button id="back-to-meal-table">Back to Prices</button>
-        </div>
+            <div id="meal-table-container" class="hidden">
+                <h2>Missing Ingredients and Prices</h2>
+                <div id="meal-table"></div>
+            </div>
 
-        <div id="user-recipe-container" class="hidden">
-            <h2>Create Your Own Recipe</h2>
-            <div class="recipe-form">
-                <input type="text" id="new-recipe-name" placeholder="Recipe Name" />
-                <input type="text" id="new-recipe-ingredients" placeholder="Ingredients (comma separated)" />
-                <textarea id="new-recipe-instructions" placeholder="Instructions"></textarea>
-                <button id="save-recipe">Save Recipe</button>
+            <div id="recipe-details" class="hidden">
+                <h2>Recipe</h2>
+                <div id="recipe-content"></div>
+                <button id="back-to-meal-table">Back to Prices</button>
+            </div>
+
+            <div id="user-recipe-container" class="hidden">
+                <h2>Create Your Own Recipe</h2>
+                <div class="recipe-form">
+                    <input type="text" id="new-recipe-name" placeholder="Recipe Name" />
+                    <input type="text" id="new-recipe-ingredients" placeholder="Ingredients (comma separated)" />
+                    <textarea id="new-recipe-instructions" placeholder="Instructions"></textarea>
+                    <button id="save-recipe">Save Recipe</button>
+                </div>
             </div>
         </div>
     </div>
@@ -162,6 +190,8 @@
             }
         ];
 
+        let userRecipes = [];
+
         // Render common ingredients for selection
         function renderCommonIngredients() {
             const commonIngredientsDiv = document.getElementById('common-ingredients');
@@ -180,6 +210,18 @@
             document.getElementById('submit-ingredients').classList.remove('hidden');
         }
 
+        // Toggle between generic recipes and user recipes
+        document.getElementById('generic-recipes').addEventListener('click', function() {
+            document.getElementById('user-recipe-container').classList.add('hidden');
+            document.getElementById('ingredient-selection').classList.remove('hidden');
+            renderCommonIngredients();
+        });
+
+        document.getElementById('user-recipes').addEventListener('click', function() {
+            document.getElementById('ingredient-selection').classList.add('hidden');
+            document.getElementById('user-recipe-container').classList.remove('hidden');
+        });
+
         document.getElementById('submit-ingredients').addEventListener('click', function() {
             const selectedIngredients = Array.from(document.querySelectorAll('.ingredient-card.selected')).map(div => div.textContent);
             const mealsWithIngredients = healthyMeals.filter(meal => 
@@ -187,53 +229,37 @@
             );
 
             if (mealsWithIngredients.length > 0) {
-                const mealCosts = {};
-                mealsWithIngredients.forEach(meal => {
-                    const currentMealMissingIngredients = meal.ingredients.filter(ingredient => !selectedIngredients.includes(ingredient));
-                    mealCosts[meal.name] = { 
-                        missingIngredients: currentMealMissingIngredients, 
-                        recipe: meal.recipe,
-                        prices: meal.prices // Store the prices
-                    };
-                });
-
-                renderMealTable(mealCosts);
-                document.getElementById('ingredient-selection').classList.add('hidden');
-                document.getElementById('meal-table-container').classList.remove('hidden');
+                calculatePrices(mealsWithIngredients, selectedIngredients);
             } else {
-                alert("No recipes can be made with the selected ingredients.");
+                alert("No matching meals found.");
             }
         });
 
-        function renderMealTable(mealCosts) {
+        function calculatePrices(meals, selectedIngredients) {
             const mealTable = document.getElementById('meal-table');
-            mealTable.innerHTML = '';
-
             let tableHTML = `<table>
                 <tr>
                     <th>Meal</th>
                     <th>Missing Ingredients</th>
-                    <th>Price</th>
+                    <th>Prices</th>
                 </tr>`;
 
-            for (const meal in mealCosts) {
-                const missingIngredients = mealCosts[meal].missingIngredients.map(ingredient => `<span class="missing">${ingredient}</span>`).join(', ');
-                
-                // Calculate total price for missing ingredients
-                const priceList = mealCosts[meal].prices;
-                const priceString = Object.entries(priceList).map(([store, price]) => `${store}: $${price.toFixed(2)}`).join('<br>');
+            meals.forEach(meal => {
+                const missingIngredients = meal.ingredients.filter(ing => !selectedIngredients.includes(ing)).join(', ');
+                const priceString = Object.entries(meal.prices)
+                    .map(([store, price]) => `${store}: $${price.toFixed(2)}`).join('<br>');
 
                 tableHTML += `<tr>
-                    <td><a href="#" class="meal-link" data-recipe="${mealCosts[meal].recipe}">${meal}</a></td>
-                    <td>${missingIngredients}</td>
+                    <td><a href="#" class="meal-link" data-recipe="${meal.recipe}">${meal.name}</a></td>
+                    <td class="${missingIngredients ? 'missing' : ''}">${missingIngredients}</td>
                     <td>${priceString}</td>
                 </tr>`;
-            }
+            });
 
             tableHTML += `</table>`;
             mealTable.innerHTML = tableHTML;
+            document.getElementById('meal-table-container').classList.remove('hidden');
 
-            // Add click event to meal links to show recipe
             const mealLinks = document.querySelectorAll('.meal-link');
             mealLinks.forEach(link => {
                 link.addEventListener('click', function(event) {
@@ -252,23 +278,20 @@
             document.getElementById('recipe-details').classList.remove('hidden');
         }
 
-        // Back button to return to meal table
         document.getElementById('back-to-meal-table').addEventListener('click', function() {
             document.getElementById('recipe-details').classList.add('hidden');
             document.getElementById('meal-table-container').classList.remove('hidden');
         });
 
-        // Save user-defined recipe
         document.getElementById('save-recipe').addEventListener('click', function() {
             const recipeName = document.getElementById('new-recipe-name').value;
             const recipeIngredients = document.getElementById('new-recipe-ingredients').value.split(',').map(ing => ing.trim());
             const recipeInstructions = document.getElementById('new-recipe-instructions').value;
 
             if (recipeName && recipeIngredients.length > 0 && recipeInstructions) {
-                healthyMeals.push({
+                userRecipes.push({
                     name: recipeName,
                     ingredients: recipeIngredients,
-                    prices: { "Your Recipe": 0.00 }, // Placeholder for pricing
                     recipe: recipeInstructions
                 });
 
@@ -281,7 +304,6 @@
             }
         });
 
-        // Initialize the application
         renderCommonIngredients();
     </script>
 </body>
