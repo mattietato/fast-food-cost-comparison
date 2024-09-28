@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Food Cost Comparison</title>
+</head>
+<body>
+    <h1>Fast Food Cost Comparison Tool</h1>
+    <form id="cost-form">
+        <label for="fastFoodCost">Enter your weekly fast food spending ($):</label>
+        <input type="number" id="fastFoodCost" required>
+        <button type="submit">Calculate</button>
+    </form>
+
+    <div id="results" style="display:none;">
+        <h2>Results</h2>
+        <p id="savings"></p>
+        <h3>Healthy Meal Options:</h3>
+        <ul id="recipes"></ul>
+    </div>
+
+    <script>
+        const healthyMealCost = 3; // average cost of a healthy meal
+
+        document.getElementById('cost-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const fastFoodCost = parseFloat(document.getElementById('fastFoodCost').value);
+            const yearlyFastFoodCost = fastFoodCost * 52;
+            const yearlyHealthyMealCost = healthyMealCost * 3 * 7 * 52; // 3 meals a day, 7 days a week
+
+            const potentialSavings = yearlyFastFoodCost - yearlyHealthyMealCost;
+
+            document.getElementById('savings').innerText = `Potential yearly savings: $${potentialSavings.toFixed(2)}`;
+            document.getElementById('results').style.display = 'block';
+
+            const recipes = [
+                'Quinoa Salad - $2.50',
+                'Vegetable Stir-fry - $3.00',
+                'Chicken Tacos - $3.50'
+            ];
+            const recipeList = document.getElementById('recipes');
+            recipeList.innerHTML = '';
+            recipes.forEach(recipe => {
+                const li = document.createElement('li');
+                li.textContent = recipe;
+                recipeList.appendChild(li);
+            });
+        });
+    </script>
+</body>
+</html>
