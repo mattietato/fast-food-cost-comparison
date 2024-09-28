@@ -9,11 +9,11 @@
         body { 
             font-family: 'Roboto', sans-serif; 
             margin: 0; 
-            background-color: #FFF5E4; /* Background color */
-            color: #6A9C89; /* Text color */
+            background-color: #FFF5E4; 
+            color: #6A9C89; 
         }
         h1, h2 {
-            color: #CD5C08; /* Header color */
+            color: #CD5C08; 
             text-align: center;
         }
         .container {
@@ -21,7 +21,7 @@
             max-width: 800px; 
             margin: 40px auto; 
             padding: 20px; 
-            background: #C1D8C3; /* Main container background */
+            background: #C1D8C3; 
             border-radius: 10px; 
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
@@ -33,7 +33,7 @@
             width: 100%; 
             margin-bottom: 10px; 
             padding: 10px; 
-            background-color: #CD5C08; /* Sidebar button color */
+            background-color: #CD5C08; 
             color: white; 
             border: none; 
             border-radius: 5px; 
@@ -50,7 +50,7 @@
             display: inline-block; 
             margin: 10px; 
             padding: 15px; 
-            background-color: #CD5C08; /* Ingredient card color */
+            background-color: #CD5C08; 
             border-radius: 8px; 
             color: white; 
             transition: transform 0.3s, box-shadow 0.3s; 
@@ -113,13 +113,13 @@
         .recipe-form {
             margin-top: 20px;
             padding: 15px;
-            background-color: #FFF5E4; /* Recipe form background */
+            background-color: #FFF5E4; 
             border-radius: 8px;
         }
         .weekly-planner {
             margin-top: 20px;
             padding: 15px;
-            background-color: #FFF5E4; /* Weekly planner background */
+            background-color: #FFF5E4; 
             border-radius: 8px;
         }
         .weekly-table th, .weekly-table td {
@@ -131,7 +131,7 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <button id="generic-recipes">Generic Recipes</button>
+            <button id="pre-created-recipes">Pre-Created Recipes</button>
             <select id="user-recipes-dropdown">
                 <option value="">Select a Recipe</option>
                 <option value="create">Create New Recipe</option>
@@ -238,7 +238,7 @@
             {
                 name: "Vegetable Stir-fry",
                 ingredients: ["Mixed Vegetables", "Soy Sauce", "Rice"],
-                prices: { "Supermarket 1": 3.00, "Supermarket 2": 2.75, "Supermarket 3": 3.50 },
+                prices: { "Supermarket 1": 3.00, "Supermarket 2": 2.75, "Supermarket 3": 3.25 },
                 recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce."
             }
         ];
@@ -407,6 +407,26 @@
             shoppingListDiv.innerHTML += listItems;
             shoppingListDiv.classList.remove('hidden');
         }
+
+        document.getElementById('pre-created-recipes').addEventListener('click', function() {
+            const mealTable = document.getElementById('meal-table');
+            let tableHTML = `<h3>Pre-Created Recipes</h3><table>
+                <tr>
+                    <th>Recipe</th>
+                    <th>Action</th>
+                </tr>`;
+
+            healthyMeals.forEach(meal => {
+                tableHTML += `<tr>
+                    <td>${meal.name}</td>
+                    <td><button onclick="showIngredientsForRecipe(meal)">View Ingredients</button></td>
+                </tr>`;
+            });
+
+            tableHTML += `</table>`;
+            mealTable.innerHTML = tableHTML;
+            document.getElementById('meal-table-container').classList.remove('hidden');
+        });
 
         renderCommonIngredients();
         populateUserRecipesDropdown();
