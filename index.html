@@ -3,83 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fast Food Cost Comparison Tool</title>
+    <title>Cost-Saving Meal Planner</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        #results {
-            margin-top: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: center;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <h1>Fast Food Cost Comparison Tool</h1>
+    <h1>Cost-Saving Meal Planner</h1>
     <form id="cost-form">
-        <label for="fastFoodCost">Enter your weekly fast food spending ($):</label>
-        <input type="number" id="fastFoodCost" required>
-        <br>
-        <label for="supermarket1">Enter the name of Supermarket 1:</label>
+        <label for="fastFoodCost">Cost of Fast Food:</label>
+        <input type="number" id="fastFoodCost" placeholder="Enter cost" required>
+        <br><br>
+        <label for="supermarket1">Supermarket 1:</label>
         <input type="text" id="supermarket1" required>
         <br>
-        <label for="supermarket2">Enter the name of Supermarket 2:</label>
-        <input type="text" id="supermarket2">
+        <label for="supermarket2">Supermarket 2:</label>
+        <input type="text" id="supermarket2" required>
         <br>
-        <label for="supermarket3">Enter the name of Supermarket 3:</label>
+        <label for="supermarket3">Supermarket 3:</label>
         <input type="text" id="supermarket3">
-        <br>
-        <button type="submit">Calculate</button>
+        <br><br>
+        <label for="portions">Number of Portions:</label>
+        <input type="number" id="portions" value="1" min="1" required>
+        <br><br>
+        <button type="submit">Calculate Savings</button>
     </form>
 
-    <div id="results" style="display:none;">
-        <h2>Results</h2>
-        <p id="savings"></p>
-        <h3>Healthy Meal Options:</h3>
-        <ul id="recipes"></ul>
-        <h3>Cheapest Meals at Supermarkets:</h3>
+    <div id="meal-table-container" class="hidden">
+        <h2>Meal Prices</h2>
         <div id="meal-table"></div>
+    </div>
+
+    <div id="ingredient-details" class="hidden">
+        <h2>Ingredients and Price Breakdown</h2>
+        <div id="ingredient-list"></div>
+        <div id="total-cost"></div>
+        <button id="back-button">Back to Meals</button>
+    </div>
+
+    <div id="recipe-details" class="hidden">
+        <h2>Recipe</h2>
+        <div id="recipe-content"></div>
+        <div id="potential-ingredients"></div>
+        <button id="back-to-ingredients">Back to Ingredients</button>
     </div>
 
     <script>
         const healthyMeals = [
-            { name: 'Vegetable Stir-fry', baseCost: 3.00 },
-            { name: 'Chicken Tacos', baseCost: 3.50 },
-            { name: 'Pasta with Tomato Sauce', baseCost: 2.00 },
-            { name: 'Lentil Soup', baseCost: 2.50 }
+            {
+                name: "Chicken Tacos",
+                ingredients: ["Chicken", "Tortillas", "Lettuce", "Tomato", "Cheese"],
+                prices: { "Supermarket A": 5.00, "Supermarket B": 4.50, "Supermarket C": 5.25 },
+                recipe: "1. Cook chicken in a pan.\n2. Warm tortillas.\n3. Assemble with lettuce, tomato, and cheese.",
+                potentialIngredients: ["Avocado", "Sour Cream", "Jalapeños"]
+            },
+            {
+                name: "Vegetable Stir-fry",
+                ingredients: ["Mixed Vegetables", "Soy Sauce", "Rice"],
+                prices: { "Supermarket A": 3.00, "Supermarket B": 2.75, "Supermarket C": 3.50 },
+                recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce.\n3. Serve vegetables over rice.",
+                potentialIngredients: ["Sesame Oil", "Tofu", "Noodles"]
+            },
+            {
+                name: "Pasta Primavera",
+                ingredients: ["Pasta", "Mixed Vegetables", "Olive Oil", "Parmesan"],
+                prices: { "Supermarket A": 4.00, "Supermarket B": 3.50, "Supermarket C": 4.25 },
+                recipe: "1. Cook pasta according to package instructions.\n2. Sauté vegetables in olive oil.\n3. Mix pasta and vegetables, top with Parmesan.",
+                potentialIngredients: ["Basil", "Garlic", "Red Pepper Flakes"]
+            }
         ];
 
         document.getElementById('cost-form').addEventListener('submit', function(event) {
             event.preventDefault();
 
             const fastFoodCost = parseFloat(document.getElementById('fastFoodCost').value);
-            const yearlyFastFoodCost = fastFoodCost * 52;
-            const yearlyHealthyMealCost = healthyMeals.reduce((total, meal) => total + (meal.baseCost * 3 * 7 * 52), 0);
-            const potentialSavings = yearlyFastFoodCost - yearlyHealthyMealCost;
-
-            document.getElementById('savings').innerText = `Potential yearly savings: $${potentialSavings.toFixed(2)}`;
-            document.getElementById('results').style.display = 'block';
-
-            // Get supermarket names
             const supermarkets = [
                 document.getElementById('supermarket1').value,
                 document.getElementById('supermarket2').value,
                 document.getElementById('supermarket3').value
-            ].filter(Boolean); // Remove any empty values
+            ].filter(Boolean);
+            const portions = parseInt(document.getElementById('portions').value);
 
-            // Generate table
             const mealTable = document.getElementById('meal-table');
             mealTable.innerHTML = '';
 
@@ -91,14 +99,74 @@
 
             healthyMeals.forEach(meal => {
                 tableHTML += `<tr>
-                    <td>${meal.name}</td>
-                    ${supermarkets.map(() => `<td>$${meal.baseCost.toFixed(2)}</td>`).join('')}
-                </tr>`;
+                    <td><button class="meal-button">${meal.name}</button></td>`;
+
+                supermarkets.forEach(supermarket => {
+                    const price = meal.prices[supermarket] || 'N/A';
+                    const totalPrice = price !== 'N/A' ? (price * portions).toFixed(2) : price;
+                    tableHTML += `<td>${price !== 'N/A' ? '$' + totalPrice : price}</td>`;
+                });
+
+                tableHTML += `</tr>`;
             });
 
             tableHTML += `</table>`;
             mealTable.innerHTML = tableHTML;
+            document.getElementById('meal-table-container').classList.remove('hidden');
+
+            // Add event listeners to meal buttons
+            const mealButtons = document.querySelectorAll('.meal-button');
+            mealButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const mealName = this.textContent;
+                    const selectedMeal = healthyMeals.find(meal => meal.name === mealName);
+                    showIngredients(selectedMeal, portions);
+                });
+            });
         });
+
+        function showIngredients(meal, portions) {
+            const ingredientList = document.getElementById('ingredient-list');
+            ingredientList.innerHTML = `<strong>${meal.name}</strong>:<br>` + meal.ingredients.join(', ');
+
+            const totalCost = meal.prices[document.getElementById('supermarket1').value] || 0; // Adjust according to the first supermarket
+            const calculatedCost = (totalCost * portions).toFixed(2);
+            document.getElementById('total-cost').innerHTML = `Total Cost for ${portions} portions: $${calculatedCost}`;
+
+            document.getElementById('ingredient-details').classList.remove('hidden');
+
+            // Back button to return to meal selection
+            document.getElementById('back-button').addEventListener('click', function() {
+                document.getElementById('ingredient-details').classList.add('hidden');
+                document.getElementById('meal-table-container').classList.remove('hidden');
+            });
+
+            // Recipe button
+            const recipeButton = document.createElement('button');
+            recipeButton.textContent = "Show Recipe";
+            ingredientList.appendChild(recipeButton);
+
+            recipeButton.addEventListener('click', function() {
+                recipe(meal);
+            });
+        }
+
+        function recipe(meal) {
+            const recipeContent = document.getElementById('recipe-content');
+            recipeContent.innerHTML = `<strong>${meal.name}</strong>:<br>${meal.recipe.replace(/\n/g, '<br>')}`;
+
+            const potentialIngredientsList = document.getElementById('potential-ingredients');
+            potentialIngredientsList.innerHTML = `<strong>Potential Ingredients:</strong><br>` + meal.potentialIngredients.join(', ');
+
+            document.getElementById('ingredient-details').classList.add('hidden');
+            document.getElementById('recipe-details').classList.remove('hidden');
+
+            // Back button to return to ingredient details
+            document.getElementById('back-to-ingredients').addEventListener('click', function() {
+                document.getElementById('recipe-details').classList.add('hidden');
+                document.getElementById('ingredient-details').classList.remove('hidden');
+            });
+        }
     </script>
 </body>
 </html>
