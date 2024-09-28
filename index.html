@@ -10,28 +10,33 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f2f2f2; }
         .hidden { display: none; }
+        .ingredient { cursor: pointer; }
+        .selected { background-color: #d4edda; }
     </style>
 </head>
 <body>
     <h1>Cost-Saving Meal Planner</h1>
-    <form id="cost-form">
-        <label for="fastFoodCost">Cost of Fast Food:</label>
-        <input type="number" id="fastFoodCost" placeholder="Enter cost" required>
-        <br><br>
-        <label for="supermarket1">Supermarket 1:</label>
-        <input type="text" id="supermarket1" required>
-        <br>
-        <label for="supermarket2">Supermarket 2:</label>
-        <input type="text" id="supermarket2" required>
-        <br>
-        <label for="supermarket3">Supermarket 3:</label>
-        <input type="text" id="supermarket3">
-        <br><br>
-        <label for="portions">Number of Portions:</label>
-        <input type="number" id="portions" value="1" min="1" required>
-        <br><br>
-        <button type="submit">Calculate Savings</button>
-    </form>
+
+    <div id="ingredient-selection">
+        <h2>Select Ingredients You Have</h2>
+        <div id="common-ingredients"></div>
+        <button id="submit-ingredients" class="hidden">Next</button>
+    </div>
+
+    <div id="cost-form-container" class="hidden">
+        <form id="cost-form">
+            <label for="supermarket1">Supermarket 1:</label>
+            <input type="text" id="supermarket1" required>
+            <br>
+            <label for="supermarket2">Supermarket 2:</label>
+            <input type="text" id="supermarket2" required>
+            <br>
+            <label for="supermarket3">Supermarket 3:</label>
+            <input type="text" id="supermarket3">
+            <br><br>
+            <button type="submit">Calculate Prices</button>
+        </form>
+    </div>
 
     <div id="meal-table-container" class="hidden">
         <h2>Meal Prices</h2>
@@ -39,20 +44,22 @@
     </div>
 
     <div id="ingredient-details" class="hidden">
-        <h2>Ingredients and Price Breakdown</h2>
-        <div id="ingredient-list"></div>
+        <h2>Missing Ingredients and Price Breakdown</h2>
+        <div id="missing-ingredients"></div>
         <div id="total-cost"></div>
         <button id="back-button">Back to Meals</button>
     </div>
 
-    <div id="recipe-details" class="hidden">
-        <h2>Recipe</h2>
-        <div id="recipe-content"></div>
-        <div id="potential-ingredients"></div>
-        <button id="back-to-ingredients">Back to Ingredients</button>
-    </div>
-
     <script>
+        const commonIngredientsList = [
+            "Chicken", "Tortillas", "Lettuce", "Tomato", "Cheese",
+            "Mixed Vegetables", "Soy Sauce", "Rice", "Pasta",
+            "Olive Oil", "Parmesan", "Garlic", "Onion",
+            "Bell Pepper", "Zucchini", "Carrot", "Spinach",
+            "Black Beans", "Corn", "Avocado", "Sour Cream",
+            "Jalapeños", "Basil", "Red Pepper Flakes", "Tofu"
+        ];
+
         const healthyMeals = [
             {
                 name: "Chicken Tacos",
@@ -77,96 +84,94 @@
             }
         ];
 
+        // Render common ingredients for selection
+        function renderCommonIngredients() {
+            const commonIngredientsDiv = document.getElementById('common-ingredients');
+            commonIngredientsDiv.innerHTML = '';
+
+            commonIngredientsList.forEach(ingredient => {
+                const div = document.createElement('div');
+                div.textContent = ingredient;
+                div.className = 'ingredient';
+                div.addEventListener('click', () => {
+                    div.classList.toggle('selected');
+                });
+                commonIngredientsDiv.appendChild(div);
+            });
+
+            document.getElementById('submit-ingredients').classList.remove('hidden');
+        }
+
+        document.getElementById('submit-ingredients').addEventListener('click', function() {
+            const selectedIngredients = Array.from(document.querySelectorAll('.ingredient.selected')).map(div => div.textContent);
+            const mealsWithIngredients = healthyMeals.filter(meal => 
+                meal.ingredients.every(ingredient => selectedIngredients.includes(ingredient))
+            );
+
+            if (mealsWithIngredients.length > 0) {
+                document.getElementById('ingredient-selection').classList.add('hidden');
+                document.getElementById('cost-form-container').classList.remove('hidden');
+                document.getElementById('cost-form').dataset.meals = JSON.stringify(mealsWithIngredients);
+            } else {
+                alert("No recipes can be made with the selected ingredients.");
+            }
+        });
+
+        // Prepare for price calculation
         document.getElementById('cost-form').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            const fastFoodCost = parseFloat(document.getElementById('fastFoodCost').value);
             const supermarkets = [
                 document.getElementById('supermarket1').value,
                 document.getElementById('supermarket2').value,
                 document.getElementById('supermarket3').value
             ].filter(Boolean);
-            const portions = parseInt(document.getElementById('portions').value);
 
+            const mealsWithIngredients = JSON.parse(this.dataset.meals);
+            const missingIngredients = {};
+
+            mealsWithIngredients.forEach(meal => {
+                meal.ingredients.forEach(ingredient => {
+                    if (!document.querySelector(`.ingredient.selected:contains(${ingredient})`)) {
+                        if (!missingIngredients[ingredient]) {
+                            missingIngredients[ingredient] = { price: meal.prices };
+                        }
+                    }
+                });
+            });
+
+            renderMealTable(missingIngredients, supermarkets);
+        });
+
+        function renderMealTable(missingIngredients, supermarkets) {
             const mealTable = document.getElementById('meal-table');
             mealTable.innerHTML = '';
 
             let tableHTML = `<table>
                 <tr>
-                    <th>Meal</th>
+                    <th>Ingredient</th>
                     ${supermarkets.map(s => `<th>${s}</th>`).join('')}
                 </tr>`;
 
-            healthyMeals.forEach(meal => {
+            for (const ingredient in missingIngredients) {
                 tableHTML += `<tr>
-                    <td><button class="meal-button">${meal.name}</button></td>`;
+                    <td>${ingredient}</td>`;
 
                 supermarkets.forEach(supermarket => {
-                    const price = meal.prices[supermarket] || 'N/A';
-                    const totalPrice = price !== 'N/A' ? (price * portions).toFixed(2) : price;
-                    tableHTML += `<td>${price !== 'N/A' ? '$' + totalPrice : price}</td>`;
+                    const price = missingIngredients[ingredient].price[supermarket] || 'N/A';
+                    tableHTML += `<td>${price !== 'N/A' ? '$' + price : price}</td>`;
                 });
 
                 tableHTML += `</tr>`;
-            });
+            }
 
             tableHTML += `</table>`;
             mealTable.innerHTML = tableHTML;
             document.getElementById('meal-table-container').classList.remove('hidden');
-
-            // Add event listeners to meal buttons
-            const mealButtons = document.querySelectorAll('.meal-button');
-            mealButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const mealName = this.textContent;
-                    const selectedMeal = healthyMeals.find(meal => meal.name === mealName);
-                    showIngredients(selectedMeal, portions);
-                });
-            });
-        });
-
-        function showIngredients(meal, portions) {
-            const ingredientList = document.getElementById('ingredient-list');
-            ingredientList.innerHTML = `<strong>${meal.name}</strong>:<br>` + meal.ingredients.join(', ');
-
-            const totalCost = meal.prices[document.getElementById('supermarket1').value] || 0; // Adjust according to the first supermarket
-            const calculatedCost = (totalCost * portions).toFixed(2);
-            document.getElementById('total-cost').innerHTML = `Total Cost for ${portions} portions: $${calculatedCost}`;
-
-            document.getElementById('ingredient-details').classList.remove('hidden');
-
-            // Back button to return to meal selection
-            document.getElementById('back-button').addEventListener('click', function() {
-                document.getElementById('ingredient-details').classList.add('hidden');
-                document.getElementById('meal-table-container').classList.remove('hidden');
-            });
-
-            // Recipe button
-            const recipeButton = document.createElement('button');
-            recipeButton.textContent = "Show Recipe";
-            ingredientList.appendChild(recipeButton);
-
-            recipeButton.addEventListener('click', function() {
-                recipe(meal);
-            });
         }
 
-        function recipe(meal) {
-            const recipeContent = document.getElementById('recipe-content');
-            recipeContent.innerHTML = `<strong>${meal.name}</strong>:<br>${meal.recipe.replace(/\n/g, '<br>')}`;
-
-            const potentialIngredientsList = document.getElementById('potential-ingredients');
-            potentialIngredientsList.innerHTML = `<strong>Potential Ingredients:</strong><br>` + meal.potentialIngredients.join(', ');
-
-            document.getElementById('ingredient-details').classList.add('hidden');
-            document.getElementById('recipe-details').classList.remove('hidden');
-
-            // Back button to return to ingredient details
-            document.getElementById('back-to-ingredients').addEventListener('click', function() {
-                document.getElementById('recipe-details').classList.add('hidden');
-                document.getElementById('ingredient-details').classList.remove('hidden');
-            });
-        }
+        // Initialize the application
+        renderCommonIngredients();
     </script>
 </body>
 </html>
