@@ -53,18 +53,22 @@
         .hidden {
             display: none;
         }
-        #meal-table {
+        #meal-table, #weekly-table {
             margin-top: 20px;
             border-collapse: collapse;
             width: 100%;
         }
-        #meal-table th, #meal-table td {
+        #meal-table th, #meal-table td, #weekly-table th, #weekly-table td {
             border: 1px solid #C1D8C3;
             padding: 8px;
             text-align: left;
         }
         .missing {
             color: red;
+        }
+        .weekly-planner select {
+            width: 100%;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -79,29 +83,101 @@
     </div>
     <div id="main-content">
         <h1>Cost-Saving Meal Planner</h1>
+        
+        <!-- Ingredient Selection -->
         <div id="ingredient-selection">
             <h2>Select Ingredients You Have</h2>
             <div id="common-ingredients"></div>
             <button id="submit-ingredients" class="hidden">Next</button>
         </div>
 
+        <!-- Missing Ingredients Table -->
         <div id="meal-table-container" class="hidden">
             <h2>Missing Ingredients and Prices</h2>
             <div id="meal-table"></div>
         </div>
 
+        <!-- My Recipes Section -->
         <div id="my-recipes" class="hidden">
             <h2>My Recipes</h2>
             <select id="recipe-dropdown">
                 <option value="">Select a Recipe</option>
-                <!-- Populate with user-created recipes -->
             </select>
             <button id="load-recipe" class="hidden">Load Recipe</button>
+            <h3>Create a New Recipe</h3>
+            <input type="text" id="new-recipe-name" placeholder="Recipe Name" />
+            <input type="text" id="new-recipe-ingredients" placeholder="Ingredients (comma separated)" />
+            <button id="save-recipe">Save Recipe</button>
         </div>
 
+        <!-- Weekly Planner Section -->
         <div id="weekly-planner" class="hidden">
             <h2>Weekly Meal Planner</h2>
-            <!-- Weekly meal planner content goes here -->
+            <table id="weekly-table">
+                <tr>
+                    <th>Day</th>
+                    <th>Meal</th>
+                </tr>
+                <tr>
+                    <td>Monday</td>
+                    <td>
+                        <select class="weekly-meal-select">
+                            <option value="">Select a Meal</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Tuesday</td>
+                    <td>
+                        <select class="weekly-meal-select">
+                            <option value="">Select a Meal</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Wednesday</td>
+                    <td>
+                        <select class="weekly-meal-select">
+                            <option value="">Select a Meal</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Thursday</td>
+                    <td>
+                        <select class="weekly-meal-select">
+                            <option value="">Select a Meal</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Friday</td>
+                    <td>
+                        <select class="weekly-meal-select">
+                            <option value="">Select a Meal</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Saturday</td>
+                    <td>
+                        <select class="weekly-meal-select">
+                            <option value="">Select a Meal</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Sunday</td>
+                    <td>
+                        <select class="weekly-meal-select">
+                            <option value="">Select a Meal</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <button id="generate-shopping-list">Generate Shopping List</button>
+            <h3>Weekly Shopping List</h3>
+            <div id="weekly-shop-list"></div>
         </div>
     </div>
 
@@ -124,8 +200,20 @@
                 },
                 recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce."
             },
+            {
+                name: "Chicken Pasta",
+                ingredients: ["Chicken", "Pasta", "Garlic"],
+                prices: {
+                    "Store A": 7.00,
+                    "Store B": 6.50,
+                    "Store C": 7.25
+                },
+                recipe: "1. Boil pasta.\n2. Cook chicken with garlic.\n3. Mix together."
+            },
             // Add more recipes as needed
         ];
+
+        let userRecipes = [];
 
         function renderCommonIngredients() {
             const commonIngredientsDiv = document.getElementById('common-ingredients');
@@ -196,13 +284,65 @@
             document.getElementById('ingredient-selection').classList.add('hidden');
             document.getElementById('meal-table-container').classList.add('hidden');
             document.getElementById('weekly-planner').classList.add('hidden');
+
+            const recipeDropdown = document.getElementById('recipe-dropdown');
+            recipeDropdown.innerHTML = '<option value="">Select a Recipe</option>';
+
+            userRecipes.forEach((recipe, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = recipe.name;
+                recipeDropdown.appendChild(option);
+            });
         }
+
+        document.getElementById('save-recipe').addEventListener('click', function() {
+            const recipeName = document.getElementById('new-recipe-name').value;
+            const recipeIngredients = document.getElementById('new-recipe-ingredients').value.split(',').map(ing => ing.trim());
+            if (recipeName && recipeIngredients.length > 0) {
+                userRecipes.push({ name: recipeName, ingredients: recipeIngredients });
+                alert("Recipe saved!");
+                document.getElementById('new-recipe-name').value = '';
+                document.getElementById('new-recipe-ingredients').value = '';
+                showMyRecipes();
+                updateWeeklyMealSelectors();
+            } else {
+                alert("Please enter a valid recipe name and ingredients.");
+            }
+        });
+
+        function updateWeeklyMealSelectors() {
+            const selects = document.querySelectorAll('.weekly-meal-select');
+            selects.forEach(select => {
+                select.innerHTML = '<option value="">Select a Meal</option>';
+                healthyMeals.concat(userRecipes).forEach((meal, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = meal.name;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        document.getElementById('generate-shopping-list').addEventListener('click', function() {
+            const selectedMeals = Array.from(document.querySelectorAll('.weekly-meal-select'))
+                .map(select => select.value)
+                .filter(value => value !== "");
+            const allIngredients = new Set();
+            selectedMeals.forEach(value => {
+                const meal = healthyMeals.concat(userRecipes)[value];
+                meal.ingredients.forEach(ing => allIngredients.add(ing));
+            });
+            const shoppingList = Array.from(allIngredients).join(', ');
+            document.getElementById('weekly-shop-list').innerHTML = shoppingList || "No ingredients needed.";
+        });
 
         function showWeeklyPlanner() {
             document.getElementById('weekly-planner').classList.remove('hidden');
             document.getElementById('ingredient-selection').classList.add('hidden');
             document.getElementById('meal-table-container').classList.add('hidden');
             document.getElementById('my-recipes').classList.add('hidden');
+            updateWeeklyMealSelectors();
         }
 
         renderCommonIngredients();
