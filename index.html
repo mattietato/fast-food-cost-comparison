@@ -310,31 +310,37 @@
 
         document.getElementById('submit-ingredients').addEventListener('click', function() {
             const selectedIngredients = Array.from(document.querySelectorAll('.ingredient-card.selected')).map(card => card.textContent);
-            const selectedRecipe = userRecipes[document.getElementById('user-recipes-dropdown').value];
+            const matchingRecipes = healthyMeals.filter(meal => 
+                meal.ingredients.some(ingredient => selectedIngredients.includes(ingredient))
+            );
 
-            if (selectedRecipe) {
-                calculatePrices(selectedRecipe, selectedIngredients);
+            if (matchingRecipes.length > 0) {
+                showMissingIngredientsTable(matchingRecipes, selectedIngredients);
             } else {
-                alert("Please select a recipe first.");
+                alert("No matching recipes found with the selected ingredients.");
             }
         });
 
-        function calculatePrices(selectedRecipe, selectedIngredients) {
+        function showMissingIngredientsTable(recipes, selectedIngredients) {
             const mealTable = document.getElementById('meal-table');
-            const missingIngredients = selectedRecipe.ingredients.filter(ing => !selectedIngredients.includes(ing));
             let tableHTML = `<table>
                 <tr>
+                    <th>Recipe</th>
                     <th>Missing Ingredients</th>
                     <th>Prices</th>
                 </tr>`;
 
-            const priceString = Object.entries(selectedRecipe.prices)
-                .map(([store, price]) => `${store}: $${price.toFixed(2)}`).join('<br>');
-
-            tableHTML += `<tr>
-                <td class="missing">${missingIngredients.join(', ')}</td>
-                <td>${priceString}</td>
-            </tr>`;
+            recipes.forEach(recipe => {
+                const missingIngredients = recipe.ingredients.filter(ing => !selectedIngredients.includes(ing));
+                const priceString = Object.entries(recipe.prices)
+                    .map(([store, price]) => `${store}: $${price.toFixed(2)}`).join('<br>');
+                
+                tableHTML += `<tr>
+                    <td>${recipe.name}</td>
+                    <td class="missing">${missingIngredients.join(', ')}</td>
+                    <td>${priceString}</td>
+                </tr>`;
+            });
 
             tableHTML += `</table>`;
             mealTable.innerHTML = tableHTML;
