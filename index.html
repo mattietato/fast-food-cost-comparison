@@ -13,7 +13,7 @@
             color: #343a40; 
         }
         h1, h2 {
-            color: #ff69b4; /* Changed to pink */
+            color: #007bff; /* Changed back to blue */
         }
         .container {
             max-width: 800px; 
@@ -153,7 +153,11 @@
                 const mealCosts = {};
                 mealsWithIngredients.forEach(meal => {
                     const currentMealMissingIngredients = meal.ingredients.filter(ingredient => !selectedIngredients.includes(ingredient));
-                    mealCosts[meal.name] = { missingIngredients: currentMealMissingIngredients, recipe: meal.recipe };
+                    mealCosts[meal.name] = { 
+                        missingIngredients: currentMealMissingIngredients, 
+                        recipe: meal.recipe,
+                        prices: meal.prices // Store the prices
+                    };
                 });
 
                 renderMealTable(mealCosts);
@@ -172,13 +176,20 @@
                 <tr>
                     <th>Meal</th>
                     <th>Missing Ingredients</th>
+                    <th>Price</th>
                 </tr>`;
 
             for (const meal in mealCosts) {
                 const missingIngredients = mealCosts[meal].missingIngredients.map(ingredient => `<span class="missing">${ingredient}</span>`).join(', ');
+                
+                // Calculate total price for missing ingredients
+                const priceList = mealCosts[meal].prices;
+                const priceString = Object.entries(priceList).map(([store, price]) => `${store}: $${price.toFixed(2)}`).join('<br>');
+
                 tableHTML += `<tr>
                     <td><a href="#" class="meal-link" data-recipe="${mealCosts[meal].recipe}">${meal}</a></td>
                     <td>${missingIngredients}</td>
+                    <td>${priceString}</td>
                 </tr>`;
             }
 
