@@ -9,6 +9,16 @@
             font-family: Arial, sans-serif;
             background-color: #FFF5E4;
             color: #242331;
+            display: flex;
+        }
+        #sidebar {
+            width: 200px;
+            padding: 20px;
+            background-color: #C1D8C3;
+        }
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
         }
         #common-ingredients {
             display: flex;
@@ -59,16 +69,40 @@
     </style>
 </head>
 <body>
-    <h1>Cost-Saving Meal Planner</h1>
-    <div id="ingredient-selection">
-        <h2>Select Ingredients You Have</h2>
-        <div id="common-ingredients"></div>
-        <button id="submit-ingredients" class="hidden">Next</button>
+    <div id="sidebar">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="#" onclick="showIngredientSelection()">Meal Planner</a></li>
+            <li><a href="#" onclick="showMyRecipes()">My Recipes</a></li>
+            <li><a href="#" onclick="showWeeklyPlanner()">Weekly Planner</a></li>
+        </ul>
     </div>
+    <div id="main-content">
+        <h1>Cost-Saving Meal Planner</h1>
+        <div id="ingredient-selection">
+            <h2>Select Ingredients You Have</h2>
+            <div id="common-ingredients"></div>
+            <button id="submit-ingredients" class="hidden">Next</button>
+        </div>
 
-    <div id="meal-table-container" class="hidden">
-        <h2>Missing Ingredients and Prices</h2>
-        <div id="meal-table"></div>
+        <div id="meal-table-container" class="hidden">
+            <h2>Missing Ingredients and Prices</h2>
+            <div id="meal-table"></div>
+        </div>
+
+        <div id="my-recipes" class="hidden">
+            <h2>My Recipes</h2>
+            <select id="recipe-dropdown">
+                <option value="">Select a Recipe</option>
+                <!-- Populate with user-created recipes -->
+            </select>
+            <button id="load-recipe" class="hidden">Load Recipe</button>
+        </div>
+
+        <div id="weekly-planner" class="hidden">
+            <h2>Weekly Meal Planner</h2>
+            <!-- Weekly meal planner content goes here -->
+        </div>
     </div>
 
     <script>
@@ -147,6 +181,28 @@
             tableHTML += `</table>`;
             mealTable.innerHTML = tableHTML;
             document.getElementById('meal-table-container').classList.remove('hidden');
+        }
+
+        function showIngredientSelection() {
+            document.getElementById('ingredient-selection').classList.remove('hidden');
+            document.getElementById('meal-table-container').classList.add('hidden');
+            document.getElementById('my-recipes').classList.add('hidden');
+            document.getElementById('weekly-planner').classList.add('hidden');
+            renderCommonIngredients();
+        }
+
+        function showMyRecipes() {
+            document.getElementById('my-recipes').classList.remove('hidden');
+            document.getElementById('ingredient-selection').classList.add('hidden');
+            document.getElementById('meal-table-container').classList.add('hidden');
+            document.getElementById('weekly-planner').classList.add('hidden');
+        }
+
+        function showWeeklyPlanner() {
+            document.getElementById('weekly-planner').classList.remove('hidden');
+            document.getElementById('ingredient-selection').classList.add('hidden');
+            document.getElementById('meal-table-container').classList.add('hidden');
+            document.getElementById('my-recipes').classList.add('hidden');
         }
 
         renderCommonIngredients();
