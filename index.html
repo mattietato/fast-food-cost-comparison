@@ -29,7 +29,7 @@
             width: 200px; 
             margin-right: 20px; 
         }
-        .sidebar button {
+        .sidebar button, .sidebar select {
             width: 100%; 
             margin-bottom: 10px; 
             padding: 10px; 
@@ -40,7 +40,7 @@
             cursor: pointer; 
             transition: background-color 0.3s;
         }
-        .sidebar button:hover { 
+        .sidebar button:hover, .sidebar select:hover { 
             background-color: #0056b3; 
         }
         .content {
@@ -121,7 +121,10 @@
     <div class="container">
         <div class="sidebar">
             <button id="generic-recipes">Generic Recipes</button>
-            <button id="user-recipes">My Recipes</button>
+            <select id="user-recipes-dropdown">
+                <option value="">Select a Recipe</option>
+                <option value="create">Create New Recipe</option>
+            </select>
         </div>
         <div class="content">
             <h1>Cost-Saving Meal Planner</h1>
@@ -222,29 +225,29 @@
             document.getElementById('submit-ingredients').classList.remove('hidden');
         }
 
-        // Toggle between generic recipes and user recipes
-        document.getElementById('generic-recipes').addEventListener('click', function() {
-            document.getElementById('user-recipe-container').classList.add('hidden');
-            document.getElementById('ingredient-selection').classList.remove('hidden');
-            renderCommonIngredients();
-        });
-
-        document.getElementById('user-recipes').addEventListener('click', function() {
-            document.getElementById('ingredient-selection').classList.add('hidden');
-            document.getElementById('user-recipe-container').classList.remove('hidden');
-            displayUserRecipes();
-        });
-
-        // Display user-created recipes
-        function displayUserRecipes() {
-            const userRecipeContainer = document.getElementById('user-recipe-container');
-            userRecipeContainer.innerHTML = '<h2>Your Recipes</h2>';
-            userRecipes.forEach(recipe => {
-                const recipeDiv = document.createElement('div');
-                recipeDiv.innerHTML = `<strong>${recipe.name}</strong>: ${recipe.ingredients.join(', ')}<br>${recipe.recipe}`;
-                userRecipeContainer.appendChild(recipeDiv);
+        // Populate dropdown with user recipes
+        function populateUserRecipesDropdown() {
+            const dropdown = document.getElementById('user-recipes-dropdown');
+            userRecipes.forEach((recipe, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = recipe.name;
+                dropdown.appendChild(option);
             });
         }
+
+        // Toggle between generic recipes and user recipes
+        document.getElementById('user-recipes-dropdown').addEventListener('change', function() {
+            const selectedValue = this.value;
+            if (selectedValue === "create") {
+                document.getElementById('user-recipe-container').classList.remove('hidden');
+                document.getElementById('meal-table-container').classList.add('hidden');
+                document.getElementById('recipe-details').classList.add('hidden');
+            } else if (selectedValue) {
+                const selectedRecipe = userRecipes[selectedValue];
+                calculatePrices([selectedRecipe], []); // Show user recipe in the price table
+            }
+        });
 
         // Handle ingredient selection submission
         document.getElementById('submit-ingredients').addEventListener('click', function() {
@@ -331,12 +334,25 @@
                 document.getElementById('new-recipe-instructions').value = '';
                 renderCommonIngredients(); // Update ingredient list with new ingredients
                 displayUserRecipes(); // Refresh user recipes
+                populateUserRecipesDropdown(); // Refresh dropdown
             } else {
                 alert("Please fill out all fields.");
             }
         });
 
+        function displayUserRecipes() {
+            const dropdown = document.getElementById('user-recipes-dropdown');
+            dropdown.innerHTML = '<option value="">Select a Recipe</option><option value="create">Create New Recipe</option>';
+            userRecipes.forEach((recipe, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = recipe.name;
+                dropdown.appendChild(option);
+            });
+        }
+
         renderCommonIngredients();
+        populateUserRecipesDropdown();
     </script>
 </body>
 </html>
