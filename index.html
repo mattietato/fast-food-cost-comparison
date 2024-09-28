@@ -70,4 +70,145 @@
                 potentialIngredients: ["Avocado", "Sour Cream", "Jalapeños"]
             },
             {
-                name: "Vegetable 
+                name: "Vegetable Stir-fry",
+                ingredients: ["Mixed Vegetables", "Soy Sauce", "Rice"],
+                prices: { "Supermarket A": 3.00, "Supermarket B": 2.75, "Supermarket C": 3.50 },
+                recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce.\n3. Serve vegetables over rice.",
+                potentialIngredients: ["Sesame Oil", "Tofu", "Noodles"]
+            },
+            {
+                name: "Pasta Primavera",
+                ingredients: ["Pasta", "Mixed Vegetables", "Olive Oil", "Parmesan"],
+                prices: { "Supermarket A": 4.00, "Supermarket B": 3.50, "Supermarket C": 4.25 },
+                recipe: "1. Cook pasta according to package instructions.\n2. Sauté vegetables in olive oil.\n3. Mix pasta and vegetables, top with Parmesan.",
+                potentialIngredients: ["Basil", "Garlic", "Red Pepper Flakes"]
+            }
+        ];
+
+        // Render common ingredients for selection
+        function renderCommonIngredients() {
+            const commonIngredientsDiv = document.getElementById('common-ingredients');
+            commonIngredientsDiv.innerHTML = '';
+
+            commonIngredientsList.forEach(ingredient => {
+                const div = document.createElement('div');
+                div.textContent = ingredient;
+                div.className = 'ingredient';
+                div.addEventListener('click', () => {
+                    div.classList.toggle('selected');
+                });
+                commonIngredientsDiv.appendChild(div);
+            });
+
+            document.getElementById('submit-ingredients').classList.remove('hidden');
+        }
+
+        document.getElementById('submit-ingredients').addEventListener('click', function() {
+            const selectedIngredients = Array.from(document.querySelectorAll('.ingredient.selected')).map(div => div.textContent);
+            const mealsWithIngredients = healthyMeals.filter(meal => 
+                meal.ingredients.some(ingredient => selectedIngredients.includes(ingredient))
+            );
+
+            if (mealsWithIngredients.length > 0) {
+                document.getElementById('ingredient-selection').classList.add('hidden');
+                document.getElementById('cost-form-container').classList.remove('hidden');
+                document.getElementById('cost-form').dataset.meals = JSON.stringify(mealsWithIngredients);
+            } else {
+                alert("No recipes can be made with the selected ingredients.");
+            }
+        });
+
+        // Prepare for price calculation
+        document.getElementById('cost-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const supermarkets = [
+                document.getElementById('supermarket1').value,
+                document.getElementById('supermarket2').value,
+                document.getElementById('supermarket3').value
+            ].filter(Boolean);
+
+            const mealsWithIngredients = JSON.parse(this.dataset.meals);
+            const missingIngredients = {};
+            let bestMeal = null;
+            let totalCost = 0;
+
+            mealsWithIngredients.forEach(meal => {
+                let missingCount = 0;
+                const currentMealMissingIngredients = {};
+
+                meal.ingredients.forEach(ingredient => {
+                    if (!document.querySelector(`.ingredient.selected:contains(${ingredient})`)) {
+                        missingCount++;
+                        currentMealMissingIngredients[ingredient] = meal.prices;
+                    }
+                });
+
+                // Check for the best meal based on missing ingredients
+                if (missingCount > 0 && (!bestMeal || missingCount < bestMeal.missingCount)) {
+                    bestMeal = { meal, missingCount, currentMealMissingIngredients };
+                }
+            });
+
+            if (bestMeal) {
+                const { meal, currentMealMissingIngredients } = bestMeal;
+                for (const ingredient in currentMealMissingIngredients) {
+                    const prices = currentMealMissingIngredients[ingredient];
+                    totalCost += Object.values(prices).reduce((a, b) => Math.min(a, b), Infinity);
+                }
+                
+                renderMealTable(currentMealMissingIngredients, supermarkets);
+                document.getElementById('total-cost').textContent = `Total cost for missing ingredients: $${totalCost.toFixed(2)}`;
+                document.getElementById('show-recipe').dataset.meal = JSON.stringify(meal);
+                document.getElementById('show-recipe').classList.remove('hidden');
+            }
+        });
+
+        function renderMealTable(missingIngredients, supermarkets) {
+            const mealTable = document.getElementById('meal-table');
+            mealTable.innerHTML = '';
+
+            let tableHTML = `<table>
+                <tr>
+                    <th>Ingredient</th>
+                    ${supermarkets.map(s => `<th>${s}</th>`).join('')}
+                </tr>`;
+
+            for (const ingredient in missingIngredients) {
+                tableHTML += `<tr>
+                    <td>${ingredient}</td>`;
+
+                supermarkets.forEach(supermarket => {
+                    const price = missingIngredients[ingredient][supermarket] || 'N/A';
+                    tableHTML += `<td>${price !== 'N/A' ? '$' + price : price}</td>`;
+                });
+
+                tableHTML += `</tr>`;
+            }
+
+            tableHTML += `</table>`;
+            mealTable.innerHTML = tableHTML;
+            document.getElementById('meal-table-container').classList.remove('hidden');
+        }
+
+        // Show recipe for the best meal
+        document.getElementById('show-recipe').addEventListener('click', function() {
+            const meal = JSON.parse(this.dataset.meal);
+            const recipeContent = document.getElementById('recipe-content');
+            recipeContent.innerHTML = `<strong>${meal.name}</strong>:<br>${meal.recipe.replace(/\n/g, '<br>')}`;
+
+            document.getElementById('meal-table-container').classList.add('hidden');
+            document.getElementById('recipe-details').classList.remove('hidden');
+        });
+
+        // Back button to return to meal table
+        document.getElementById('back-to-meal-table').addEventListener('click', function() {
+            document.getElementById('recipe-details').classList.add('hidden');
+            document.getElementById('meal-table-container').classList.remove('hidden');
+        });
+
+        // Initialize the application
+        renderCommonIngredients();
+    </script>
+</body>
+</html>
