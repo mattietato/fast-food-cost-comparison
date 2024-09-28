@@ -24,21 +24,6 @@
         <button id="submit-ingredients" class="hidden">Next</button>
     </div>
 
-    <div id="cost-form-container" class="hidden">
-        <form id="cost-form">
-            <label for="supermarket1">Supermarket 1:</label>
-            <input type="text" id="supermarket1" required>
-            <br>
-            <label for="supermarket2">Supermarket 2:</label>
-            <input type="text" id="supermarket2" required>
-            <br>
-            <label for="supermarket3">Supermarket 3:</label>
-            <input type="text" id="supermarket3">
-            <br><br>
-            <button type="submit">Calculate Prices</button>
-        </form>
-    </div>
-
     <div id="meal-table-container" class="hidden">
         <h2>Missing Ingredients and Prices</h2>
         <div id="meal-table"></div>
@@ -66,19 +51,19 @@
             {
                 name: "Chicken Tacos",
                 ingredients: ["Chicken", "Tortillas", "Lettuce", "Tomato", "Cheese"],
-                prices: { "Supermarket A": 5.00, "Supermarket B": 4.50, "Supermarket C": 5.25 },
+                prices: { "Supermarket 1": 5.00, "Supermarket 2": 4.50, "Supermarket 3": 5.25 },
                 recipe: "1. Cook chicken in a pan.\n2. Warm tortillas.\n3. Assemble with lettuce, tomato, and cheese."
             },
             {
                 name: "Vegetable Stir-fry",
                 ingredients: ["Mixed Vegetables", "Soy Sauce", "Rice"],
-                prices: { "Supermarket A": 3.00, "Supermarket B": 2.75, "Supermarket C": 3.50 },
+                prices: { "Supermarket 1": 3.00, "Supermarket 2": 2.75, "Supermarket 3": 3.50 },
                 recipe: "1. Cook rice according to package instructions.\n2. Stir-fry vegetables in soy sauce.\n3. Serve vegetables over rice."
             },
             {
                 name: "Pasta Primavera",
                 ingredients: ["Pasta", "Mixed Vegetables", "Olive Oil", "Parmesan"],
-                prices: { "Supermarket A": 4.00, "Supermarket B": 3.50, "Supermarket C": 4.25 },
+                prices: { "Supermarket 1": 4.00, "Supermarket 2": 3.50, "Supermarket 3": 4.25 },
                 recipe: "1. Cook pasta according to package instructions.\n2. Sauté vegetables in olive oil.\n3. Mix pasta and vegetables, top with Parmesan."
             }
         ];
@@ -108,97 +93,47 @@
             );
 
             if (mealsWithIngredients.length > 0) {
+                const mealCosts = {};
+                mealsWithIngredients.forEach(meal => {
+                    const currentMealMissingIngredients = meal.ingredients.filter(ingredient => !selectedIngredients.includes(ingredient));
+                    mealCosts[meal.name] = currentMealMissingIngredients;
+                });
+
+                renderMealTable(mealCosts);
                 document.getElementById('ingredient-selection').classList.add('hidden');
-                document.getElementById('cost-form-container').classList.remove('hidden');
-                document.getElementById('cost-form').dataset.meals = JSON.stringify(mealsWithIngredients);
+                document.getElementById('meal-table-container').classList.remove('hidden');
             } else {
                 alert("No recipes can be made with the selected ingredients.");
             }
         });
 
-        // Prepare for price calculation
-        document.getElementById('cost-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const supermarkets = [
-                document.getElementById('supermarket1').value,
-                document.getElementById('supermarket2').value,
-                document.getElementById('supermarket3').value
-            ].filter(Boolean);
-
-            const mealsWithIngredients = JSON.parse(this.dataset.meals);
-            const missingIngredients = {};
-            let bestMeal = null;
-            let totalCost = 0;
-
-            mealsWithIngredients.forEach(meal => {
-                const currentMealMissingIngredients = {};
-                let mealTotalCost = 0;
-
-                meal.ingredients.forEach(ingredient => {
-                    if (!document.querySelector(`.ingredient.selected:contains(${ingredient})`)) {
-                        currentMealMissingIngredients[ingredient] = meal.prices;
-                    }
-                });
-
-                // Only consider meals that have missing ingredients
-                if (Object.keys(currentMealMissingIngredients).length > 0) {
-                    for (const ingredient in currentMealMissingIngredients) {
-                        const prices = currentMealMissingIngredients[ingredient];
-                        const minPrice = Math.min(...supermarkets.map(s => prices[s] || Infinity));
-                        if (minPrice !== Infinity) {
-                            mealTotalCost += minPrice;
-                        }
-                    }
-
-                    if (!bestMeal || mealTotalCost < totalCost) {
-                        bestMeal = { meal, currentMealMissingIngredients };
-                        totalCost = mealTotalCost;
-                    }
-                }
-            });
-
-            if (bestMeal) {
-                const { meal, currentMealMissingIngredients } = bestMeal;
-                renderMealTable(currentMealMissingIngredients, supermarkets);
-                document.getElementById('total-cost').textContent = `Total cost for missing ingredients: $${totalCost.toFixed(2)}`;
-                document.getElementById('show-recipe').dataset.meal = JSON.stringify(meal);
-                document.getElementById('show-recipe').classList.remove('hidden');
-            } else {
-                alert("No missing ingredients found for the selected recipes.");
-            }
-        });
-
-        function renderMealTable(missingIngredients, supermarkets) {
+        function renderMealTable(mealCosts) {
             const mealTable = document.getElementById('meal-table');
             mealTable.innerHTML = '';
 
             let tableHTML = `<table>
                 <tr>
-                    <th>Ingredient</th>
-                    ${supermarkets.map(s => `<th>${s}</th>`).join('')}
+                    <th>Meal</th>
+                    <th>Missing Ingredients</th>
                 </tr>`;
 
-            for (const ingredient in missingIngredients) {
+            for (const meal in mealCosts) {
+                const missingIngredients = mealCosts[meal].map(ingredient => `<span class="missing">${ingredient}</span>`).join(', ');
                 tableHTML += `<tr>
-                    <td class="missing">${ingredient}</td>`;
-
-                supermarkets.forEach(supermarket => {
-                    const price = missingIngredients[ingredient][supermarket] || 'N/A';
-                    tableHTML += `<td>${price !== 'N/A' ? '$' + price : price}</td>`;
-                });
-
-                tableHTML += `</tr>`;
+                    <td>${meal}</td>
+                    <td>${missingIngredients}</td>
+                </tr>`;
             }
 
             tableHTML += `</table>`;
             mealTable.innerHTML = tableHTML;
-            document.getElementById('meal-table-container').classList.remove('hidden');
+            document.getElementById('show-recipe').classList.remove('hidden');
         }
 
-        // Show recipe for the best meal
+        // Show recipe for the best meal (dummy implementation for now)
         document.getElementById('show-recipe').addEventListener('click', function() {
-            const meal = JSON.parse(this.dataset.meal);
+            const mealName = document.querySelector('.missing').textContent; // For testing purposes
+            const meal = healthyMeals.find(m => m.name === mealName);
             const recipeContent = document.getElementById('recipe-content');
             recipeContent.innerHTML = `<strong>${meal.name}</strong>:<br>${meal.recipe.replace(/\n/g, '<br>')}`;
 
