@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fast Food Cost Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <h1>Fast Food Cost Comparison Tool</h1>
@@ -18,6 +27,8 @@
         <p id="savings"></p>
         <h3>Healthy Meal Options:</h3>
         <ul id="recipes"></ul>
+        <h3>Meal Planning</h3>
+        <div id="meal-planning"></div>
     </div>
 
     <script>
@@ -28,7 +39,7 @@
 
             const fastFoodCost = parseFloat(document.getElementById('fastFoodCost').value);
             const yearlyFastFoodCost = fastFoodCost * 52;
-            const yearlyHealthyMealCost = healthyMealCost * 3 * 7 * 52; // 3 meals a day, 7 days a week
+            const yearlyHealthyMealCost = healthyMealCost * 3 * 7 * 52;
 
             const potentialSavings = yearlyFastFoodCost - yearlyHealthyMealCost;
 
@@ -36,16 +47,30 @@
             document.getElementById('results').style.display = 'block';
 
             const recipes = [
-                'Quinoa Salad - $2.50',
-                'Vegetable Stir-fry - $3.00',
-                'Chicken Tacos - $3.50'
+                { name: 'Quinoa Salad', cost: 2.50, retailers: [{ name: 'Store A', price: 2.00 }, { name: 'Store B', price: 3.00 }] },
+                { name: 'Vegetable Stir-fry', cost: 3.00, retailers: [{ name: 'Store A', price: 2.50 }, { name: 'Store B', price: 3.50 }] },
+                { name: 'Chicken Tacos', cost: 3.50, retailers: [{ name: 'Store A', price: 3.00 }, { name: 'Store B', price: 4.00 }] }
             ];
+
             const recipeList = document.getElementById('recipes');
             recipeList.innerHTML = '';
             recipes.forEach(recipe => {
                 const li = document.createElement('li');
-                li.textContent = recipe;
+                li.textContent = `${recipe.name} - Estimated cost: $${recipe.cost.toFixed(2)}`;
                 recipeList.appendChild(li);
+            });
+
+            const mealPlanning = document.getElementById('meal-planning');
+            mealPlanning.innerHTML = '';
+            recipes.forEach(recipe => {
+                const mealDiv = document.createElement('div');
+                mealDiv.innerHTML = `<strong>${recipe.name}</strong> - Cost: $${recipe.cost.toFixed(2)}<br>`;
+                mealDiv.innerHTML += '<strong>Price Comparison:</strong><ul>';
+                recipe.retailers.forEach(retailer => {
+                    mealDiv.innerHTML += `<li>${retailer.name}: $${retailer.price.toFixed(2)}</li>`;
+                });
+                mealDiv.innerHTML += '</ul>';
+                mealPlanning.appendChild(mealDiv);
             });
         });
     </script>
