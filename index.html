@@ -190,10 +190,22 @@
             }
         ];
 
-        let userRecipes = [];
+        let userRecipes = JSON.parse(localStorage.getItem('userRecipes')) || [];
+
+        // Update common ingredients with user recipe ingredients
+        function updateCommonIngredients() {
+            userRecipes.forEach(recipe => {
+                recipe.ingredients.forEach(ingredient => {
+                    if (!commonIngredientsList.includes(ingredient)) {
+                        commonIngredientsList.push(ingredient);
+                    }
+                });
+            });
+        }
 
         // Render common ingredients for selection
         function renderCommonIngredients() {
+            updateCommonIngredients();
             const commonIngredientsDiv = document.getElementById('common-ingredients');
             commonIngredientsDiv.innerHTML = '';
 
@@ -220,10 +232,23 @@
         document.getElementById('user-recipes').addEventListener('click', function() {
             document.getElementById('ingredient-selection').classList.add('hidden');
             document.getElementById('user-recipe-container').classList.remove('hidden');
+            displayUserRecipes();
         });
 
+        // Display user-created recipes
+        function displayUserRecipes() {
+            const userRecipeContainer = document.getElementById('user-recipe-container');
+            userRecipeContainer.innerHTML = '<h2>Your Recipes</h2>';
+            userRecipes.forEach(recipe => {
+                const recipeDiv = document.createElement('div');
+                recipeDiv.innerHTML = `<strong>${recipe.name}</strong>: ${recipe.ingredients.join(', ')}<br>${recipe.recipe}`;
+                userRecipeContainer.appendChild(recipeDiv);
+            });
+        }
+
+        // Handle ingredient selection submission
         document.getElementById('submit-ingredients').addEventListener('click', function() {
-            const selectedIngredients = Array.from(document.querySelectorAll('.ingredient-card.selected')).map(div => div.textContent);
+            const selectedIngredients = Array.from(document.querySelectorAll('.ingredient-card.selected')).map(card => card.textContent);
             const mealsWithIngredients = healthyMeals.filter(meal => 
                 meal.ingredients.some(ingredient => selectedIngredients.includes(ingredient))
             );
@@ -235,6 +260,7 @@
             }
         });
 
+        // Calculate prices of missing ingredients
         function calculatePrices(meals, selectedIngredients) {
             const mealTable = document.getElementById('meal-table');
             let tableHTML = `<table>
@@ -270,6 +296,7 @@
             });
         }
 
+        // Show selected recipe
         function showRecipe(mealName, recipe) {
             const recipeContent = document.getElementById('recipe-content');
             recipeContent.innerHTML = `<strong>${mealName}</strong>:<br>${recipe.replace(/\n/g, '<br>')}`;
@@ -278,27 +305,32 @@
             document.getElementById('recipe-details').classList.remove('hidden');
         }
 
+        // Back to meal table from recipe
         document.getElementById('back-to-meal-table').addEventListener('click', function() {
             document.getElementById('recipe-details').classList.add('hidden');
             document.getElementById('meal-table-container').classList.remove('hidden');
         });
 
+        // Save user recipe
         document.getElementById('save-recipe').addEventListener('click', function() {
             const recipeName = document.getElementById('new-recipe-name').value;
             const recipeIngredients = document.getElementById('new-recipe-ingredients').value.split(',').map(ing => ing.trim());
             const recipeInstructions = document.getElementById('new-recipe-instructions').value;
 
             if (recipeName && recipeIngredients.length > 0 && recipeInstructions) {
-                userRecipes.push({
+                const newRecipe = {
                     name: recipeName,
                     ingredients: recipeIngredients,
                     recipe: recipeInstructions
-                });
-
+                };
+                userRecipes.push(newRecipe);
+                localStorage.setItem('userRecipes', JSON.stringify(userRecipes));
                 alert("Recipe saved successfully!");
                 document.getElementById('new-recipe-name').value = '';
                 document.getElementById('new-recipe-ingredients').value = '';
                 document.getElementById('new-recipe-instructions').value = '';
+                renderCommonIngredients(); // Update ingredient list with new ingredients
+                displayUserRecipes(); // Refresh user recipes
             } else {
                 alert("Please fill out all fields.");
             }
