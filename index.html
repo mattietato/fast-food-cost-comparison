@@ -253,6 +253,7 @@
         function showIngredientsForRecipe(recipe) {
             const commonIngredientsDiv = document.getElementById('common-ingredients');
             commonIngredientsDiv.innerHTML = '';
+
             recipe.ingredients.forEach(ingredient => {
                 const div = document.createElement('div');
                 div.textContent = ingredient;
@@ -271,58 +272,42 @@
         // Handle ingredient selection submission
         document.getElementById('submit-ingredients').addEventListener('click', function() {
             const selectedIngredients = Array.from(document.querySelectorAll('.ingredient-card.selected')).map(card => card.textContent);
-            const mealsWithIngredients = healthyMeals.filter(meal => 
-                meal.ingredients.some(ingredient => selectedIngredients.includes(ingredient))
-            );
+            const selectedRecipe = userRecipes[document.getElementById('user-recipes-dropdown').value];
 
-            if (mealsWithIngredients.length > 0) {
-                calculatePrices(mealsWithIngredients, selectedIngredients);
+            if (selectedRecipe) {
+                calculatePrices(selectedRecipe, selectedIngredients);
             } else {
-                alert("No matching meals found.");
+                alert("Please select a recipe first.");
             }
         });
 
         // Calculate prices of missing ingredients
-        function calculatePrices(meals, selectedIngredients) {
+        function calculatePrices(selectedRecipe, selectedIngredients) {
             const mealTable = document.getElementById('meal-table');
+            const missingIngredients = selectedRecipe.ingredients.filter(ing => !selectedIngredients.includes(ing));
             let tableHTML = `<table>
                 <tr>
-                    <th>Meal</th>
                     <th>Missing Ingredients</th>
                     <th>Prices</th>
                 </tr>`;
 
-            meals.forEach(meal => {
-                const missingIngredients = meal.ingredients.filter(ing => !selectedIngredients.includes(ing)).join(', ');
-                const priceString = Object.entries(meal.prices)
-                    .map(([store, price]) => `${store}: $${price.toFixed(2)}`).join('<br>');
+            const priceString = Object.entries(selectedRecipe.prices)
+                .map(([store, price]) => `${store}: $${price.toFixed(2)}`).join('<br>');
 
-                tableHTML += `<tr>
-                    <td><a href="#" class="meal-link" data-recipe="${meal.recipe}">${meal.name}</a></td>
-                    <td class="${missingIngredients ? 'missing' : ''}">${missingIngredients}</td>
-                    <td>${priceString}</td>
-                </tr>`;
-            });
+            tableHTML += `<tr>
+                <td class="missing">${missingIngredients.join(', ')}</td>
+                <td>${priceString}</td>
+            </tr>`;
 
             tableHTML += `</table>`;
             mealTable.innerHTML = tableHTML;
             document.getElementById('meal-table-container').classList.remove('hidden');
-
-            const mealLinks = document.querySelectorAll('.meal-link');
-            mealLinks.forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const recipe = this.getAttribute('data-recipe');
-                    showRecipe(this.textContent, recipe);
-                });
-            });
         }
 
         // Show selected recipe
         function showRecipe(mealName, recipe) {
             const recipeContent = document.getElementById('recipe-content');
             recipeContent.innerHTML = `<strong>${mealName}</strong>:<br>${recipe.replace(/\n/g, '<br>')}`;
-
             document.getElementById('meal-table-container').classList.add('hidden');
             document.getElementById('recipe-details').classList.remove('hidden');
         }
